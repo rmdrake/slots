@@ -1,3 +1,5 @@
+You can try this on my [Project Test Drive](https://rmdrake.github.io/ryanmdrake/testdrive.html).
+
 # Lucky Slots: A Study in Deviation
 
 This repository contains a collection of various implementations of a single slot machine game. While every version in this project originated from the same foundational specification, they each represent a significant creative or technical deviation from that original plan.
