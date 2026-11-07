@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sexy Slots</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Arial', sans-serif;
+    background: radial-gradient(circle at center, #1a0033 0%, #000033 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+.game-container {
+    background: linear-gradient(145deg, #2a1a4a, #1e1438);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 0 50px rgba(138, 43, 226, 0.5);
+    text-align: center;
+    max-width: 520px;
+    width: 90%;
+}
+h1 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+}
+.stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+.stat { text-align: center; }
+.stat-value { font-size: 1.5em; font-weight: bold; color: #00ffff; }
+.reels-container {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 30px 0;
+}
+.reel {
+    width: 90px;
+    height: 90px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 14px;
+    border: 2px solid #ff00ff;
+    box-shadow: inset 0 0 20px rgba(255,0,255,0.2), 0 0 20px rgba(255,0,255,0.3);
+    overflow: hidden;
+    position: relative;
+}
+.reel-strip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+.symbol {
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3em;
+}
+.reel.spinning .reel-strip {
+    animation: spinStrip 0.12s linear infinite;
+}
+@keyframes spinStrip {
+    from { transform: translateY(0); }
+    to { transform: translateY(-90px); }
+}
+.win-glow {
+    box-shadow: 0 0 40px #00ff00, inset 0 0 20px rgba(0,255,0,0.3);
+    border-color: #00ff00;
+}
+.spin-btn {
+    background: linear-gradient(to bottom, #ff00ff, #cc00cc);
+    border: none;
+    color: white;
+    padding: 15px 50px;
+    font-size: 1.3em;
+    border-radius: 30px;
+    cursor: pointer;
+    margin: 20px 0;
+    transition: all 0.3s;
+    box-shadow: 0 5px 20px rgba(255, 0, 255, 0.4);
+}
+.spin-btn:hover { transform: scale(1.05); }
+.spin-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+.result-container {
+    height: 80px;
+    margin-top: 20px;
+}
+.result {
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 1.2em;
+    min-height: 50px;
+}
+.win { background: rgba(0, 255, 0, 0.2); color: #00ff00; }
+.lose { background: rgba(255, 100, 100, 0.2); color: #ff6464; }
+.jackpot { background: rgba(255, 215, 0, 0.2); color: #ffd700; font-size: 1.5em; text-shadow: 0 0 20px #ffd700; }
+@media (max-width: 600px) {
+    .reel { width: 70px; height: 70px; }
+    .symbol { height: 70px; font-size: 2.3em; }
+}
+</style>
+</head>
+<body>
+<div class="game-container" role="main" aria-label="Sexy Slots Game">
+<h1>🍆 Sexy Slots 🍑</h1>
+<div class="stats">
+<div class="stat"><div>Credits</div><div class="stat-value" id="credits">1000</div></div>
+<div class="stat"><div>Wins</div><div class="stat-value" id="wins">0</div></div>
+<div class="stat"><div>Losses</div><div class="stat-value" id="losses">0</div></div>
+</div>
+<div class="reels-container">
+<div class="reel" id="reel1" aria-label="Reel 1"><div class="reel-strip" id="strip1"></div></div>
+<div class="reel" id="reel2" aria-label="Reel 2"><div class="reel-strip" id="strip2"></div></div>
+<div class="reel" id="reel3" aria-label="Reel 3"><div class="reel-strip" id="strip3"></div></div>
+</div>
+<button class="spin-btn" id="spinBtn" aria-label="Spin reels">SPIN - 100 Credits</button>
+<div class="result-container">
+<div class="result" id="result"></div>
+</div>
+<p style="margin-top: 15px; opacity: 0.7; font-size: 0.9em;">Match 2: +300 | Match 3: JACKPOT +1000</p>
+</div>
+<script>
+const symbols = ['🍆','🌮','🍑','👅','💦','🔥','🫦','🍒','🍑','🥑','🤤','💋'];
+let credits = 1000;
+let wins = 0;
+let losses = 0;
+let spinning = false;
+const spinCost = 100;
+
+const creditsEl = document.getElementById('credits');
+const winsEl = document.getElementById('wins');
+const lossesEl = document.getElementById('losses');
+const resultEl = document.getElementById('result');
+const spinBtn = document.getElementById('spinBtn');
+const reels = [
+    {el: document.getElementById('reel1'), strip: document.getElementById('strip1')},
+    {el: document.getElementById('reel2'), strip: document.getElementById('strip2')},
+    {el: document.getElementById('reel3'), strip: document.getElementById('strip3')}
+];
+
+let audioContext;
+function initAudio(){ if(!audioContext) audioContext = new (window.AudioContext||window.webkitAudioContext)(); }
+function playSound(freq, dur=0.3){ try{ initAudio(); const o=audioContext.createOscillator(); const g=audioContext.createGain(); o.connect(g); g.connect(audioContext.destination); o.frequency.value=freq; g.gain.setValueAtTime(0.3,audioContext.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioContext.currentTime+dur); o.start(); o.stop(audioContext.currentTime+dur);}catch(e){} }
+
+function buildStrip(strip){
+    strip.innerHTML='';
+    for(let i=0;i<20;i++){
+        const s=document.createElement('div');
+        s.className='symbol';
+        s.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+        strip.appendChild(s);
+    }
+}
+reels.forEach(r=>buildStrip(r.strip));
+
+function spin(){
+    if(spinning || credits<spinCost) return;
+    spinning=true;
+    credits-=spinCost;
+    updateUI();
+    spinBtn.disabled=true;
+    resultEl.textContent='';
+    resultEl.className='result';
+    reels.forEach(r=>r.el.classList.add('spinning'));
+    
+    const delays=[0,300,600];
+    const results=[];
+    
+    reels.forEach((r,i)=>{
+        setTimeout(()=>{
+            buildStrip(r.strip);
+            const finalIdx=Math.floor(Math.random()*symbols.length);
+            const children=[...r.strip.children];
+            const last=children[children.length-1];
+            last.textContent=symbols[finalIdx];
+            results[i]=symbols[finalIdx];
+            if(i===2){
+                setTimeout(()=>finish(results),150);
+            }
+        },delays[i]);
+    });
+}
+
+function finish(results){
+    reels.forEach(r=>r.el.classList.remove('spinning'));
+    reels.forEach((r,i)=>{
+        const children=[...r.strip.children];
+        children.forEach(c=>c.textContent=results[i]);
+    });
+    
+    let winAmount=0;
+    if(results[0]===results[1] && results[1]===results[2]){
+        winAmount=1000; credits+=winAmount; wins++; resultEl.textContent='🎉 JACKPOT! +1000 🎉'; resultEl.className='result jackpot'; playSound(660);
+        reels.forEach(r=>r.el.classList.add('win-glow'));
+    } else if(results[0]===results[1] || results[1]===results[2] || results[0]===results[2]){
+        winAmount=300; credits+=winAmount; wins++; resultEl.textContent='✨ Win! +300 ✨'; resultEl.className='result win'; playSound(440);
+        reels.forEach(r=>r.el.classList.add('win-glow'));
+    } else {
+        losses++; resultEl.textContent='😔 Better luck next time!'; resultEl.className='result lose'; playSound(220);
+    }
+    setTimeout(()=>reels.forEach(r=>r.el.classList.remove('win-glow')),2000);
+    updateUI();
+    spinning=false;
+    spinBtn.disabled=credits<spinCost;
+}
+
+function updateUI(){
+    creditsEl.textContent=credits;
+    winsEl.textContent=wins;
+    lossesEl.textContent=losses;
+}
+updateUI();
+spinBtn.addEventListener('click',spin);
+</script>
+</body>
+</html>

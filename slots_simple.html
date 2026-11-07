@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lucky Slots</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: radial-gradient(circle, #1b2735 0%, #0e1923 100%);
+      color: #f1f1f1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .game-container {
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+      background: rgba(0,0,0,0.4);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.7);
+      min-height: 260px;
+      transition: transform 0.2s;
+    }
+    .game-container:hover { transform: scale(1.02); }
+
+    .reels { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
+    .reel { width: 80px; height: 80px; background: #222; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 48px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+    .reel span { line-height: 80px; }
+    .spin-btn { padding: 12px 24px; font-size: 18px; background: #ffca28; border: none; border-radius: 6px; cursor: pointer; transition: background 0.3s, transform 0.2s; }
+    .spin-btn:hover { background: #ffb300; transform: scale(1.05); }
+    .spin-btn:disabled { background: #777; cursor: not-allowed; }
+    .credits, .stats { margin: 10px 0; }
+    .result { min-height: 1.5em; line-height: 1.5em; font-weight: bold; }
+    .win { color: #4caf50; animation: glow 1s ease-in-out infinite alternate; }
+    .lose { color: #f44336; }
+    .spinning-text { color: #fff; }
+    @keyframes glow { from { text-shadow: 0 0 5px #4caf50; } to { text-shadow: 0 0 15px #4caf50; } }
+
+    @media (max-width: 500px) {
+      .game-container { padding: 10px; }
+      .reel { width: 60px; height: 60px; font-size: 36px; }
+      .spin-btn { font-size: 16px; width: 100%; }
+      .result { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Lucky Slots</h1>
+    <div class="credits">Credits: <span id="credits">1000</span></div>
+    <div class="reels">
+      <div class="reel" id="reel1"><span>🍒</span></div>
+      <div class="reel" id="reel2"><span>🍒</span></div>
+      <div class="reel" id="reel3"><span>🍒</span></div>
+    </div>
+    <button class="spin-btn" id="spinBtn">Spin</button>
+    <div class="stats">Wins: <span id="wins">0</span> | Losses: <span id="losses">0</span></div>
+    <div class="result" id="result"></div>
+  </div>
+  <script>
+    const symbols = ["🍒", "🍋", "🍊", "🍉", "🍇", "🍓", "🍈", "🍀", "🔔", "⭐", "❄️", "🌈"];
+    const spinCost = 100;
+    const win2 = 300;
+    const win3 = 1000;
+    let credits = 1000;
+    let wins = 0;
+    let losses = 0;
+
+    const creditsEl = document.getElementById('credits');
+    const winsEl = document.getElementById('wins');
+    const lossesEl = document.getElementById('losses');
+    const resultEl = document.getElementById('result');
+    const spinBtn = document.getElementById('spinBtn');
+    const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+
+    function updateUI() {
+      creditsEl.textContent = credits;
+      winsEl.textContent = wins;
+      lossesEl.textContent = losses;
+      spinBtn.disabled = credits < spinCost;
+    }
+
+    function playSound(type) {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = type === 'win' ? 440 : 220;
+      gain.gain.value = 0.05;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.2);
+    }
+
+    function randomSymbol() {
+      return symbols[Math.floor(Math.random() * symbols.length)];
+    }
+
+    function spinReels(finalSymbols) {
+      const intervals = reels.map((reel, idx) => {
+        const span = reel.querySelector('span');
+        const id = setInterval(() => {
+          span.textContent = randomSymbol();
+        }, 100);
+        return { id, span, final: finalSymbols[idx] };
+      });
+
+      setTimeout(() => {
+        intervals.forEach(item => {
+          clearInterval(item.id);
+          item.span.textContent = item.final;
+          item.span.classList.remove('spinning');
+        });
+        evaluate();
+      }, 1500);
+    }
+
+    function evaluate() {
+      const results = reels.map(r => r.querySelector('span').textContent);
+      const counts = {};
+      results.forEach(sym => counts[sym] = (counts[sym] || 0) + 1);
+      const values = Object.values(counts);
+      resultEl.classList.remove('spinning-text');
+      if (values.includes(3)) {
+        credits += win3;
+        wins++;
+        resultEl.textContent = 'JACKPOT! +1000';
+        resultEl.className = 'win';
+        playSound('win');
+      } else if (values.includes(2)) {
+        credits += win2;
+        wins++;
+        resultEl.textContent = 'You win! +300';
+        resultEl.className = 'win';
+        playSound('win');
+      } else {
+        losses++;
+        resultEl.textContent = 'Sorry, you lose.';
+        resultEl.className = 'lose';
+        playSound('lose');
+      }
+      updateUI();
+    }
+
+    spinBtn.addEventListener('click', () => {
+      if (credits < spinCost) return;
+      credits -= spinCost;
+      spinBtn.disabled = true;
+      resultEl.textContent = 'Spinning...';
+      resultEl.classList.add('spinning-text');
+      const finalSymbols = [randomSymbol(), randomSymbol(), randomSymbol()];
+      spinReels(finalSymbols);
+    });
+
+    updateUI();
+  </script>
+</body>
+</html>

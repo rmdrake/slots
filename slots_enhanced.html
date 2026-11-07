@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Slots Game - Enhanced</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: radial-gradient(circle, #0c1445 0%, #000000 70%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .game-container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00bfff, 0 0 20px #00bfff;
+            letter-spacing: 2px;
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 5px #00bfff, 0 0 10px #00bfff; }
+            to { text-shadow: 0 0 15px #00bfff, 0 0 30px #00bfff, 0 0 45px #00bfff; }
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 191, 255, 0.5);
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            font-size: 1.2rem;
+            margin: 5px;
+        }
+
+        .reels-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .reel {
+            width: 100px;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid #00bfff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            box-shadow: 0 0 10px rgba(0, 191, 255, 0.8);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        .reel::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(0, 191, 255, 0.2), transparent);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .spin-button {
+            background: linear-gradient(to bottom, #ff8c00, #ff4500);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 20px 0;
+            box-shadow: 0 0 15px rgba(255, 69, 0, 0.7);
+            transition: all 0.3s ease;
+            font-weight: bold;
+            letter-spacing: 1px;
+            display: inline-block;
+        }
+
+        .spin-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(255, 69, 0, 0.9);
+        }
+
+        .spin-button:disabled {
+            background: linear-gradient(to bottom, #666, #333);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .message {
+            font-size: 1.5rem;
+            margin: 20px 0;
+            min-height: 2rem;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        .win {
+            color: #00ff00;
+            animation: winPulse 0.5s infinite alternate;
+        }
+
+        .loss {
+            color: #ff0000;
+            animation: lossPulse 0.5s infinite alternate;
+        }
+
+        @keyframes winPulse {
+            from { text-shadow: 0 0 5px #00ff00; }
+            to { text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; }
+        }
+
+        @keyframes lossPulse {
+            from { text-shadow: 0 0 5px #ff0000; }
+            to { text-shadow: 0 0 20px #ff0000, 0 0 30px #ff0000; }
+        }
+
+        .jackpot {
+            animation: jackpot 0.5s infinite alternate;
+        }
+
+        @keyframes jackpot {
+            from { 
+                text-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00;
+                transform: scale(1);
+            }
+            to { 
+                text-shadow: 0 0 30px #ffff00, 0 0 50px #ffff00;
+                transform: scale(1.1);
+            }
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle var(--duration, 3s) infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid #00bfff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(0, 191, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .instructions {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+            max-width: 800px;
+        }
+
+        .instructions h2 {
+            margin-bottom: 15px;
+            color: #00bfff;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin: 10px 0;
+        }
+
+        .stats-display {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .theme-selector {
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .theme-btn {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid #00bfff;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-btn:hover {
+            background: rgba(0, 191, 255, 0.3);
+        }
+
+        .theme-btn.active {
+            background: rgba(0, 191, 255, 0.7);
+            box-shadow: 0 0 10px rgba(0, 191, 255, 0.7);
+        }
+
+        .progressive-jackpot {
+            font-size: 1.2rem;
+            margin: 10px 0;
+            color: #ffff00;
+            text-shadow: 0 0 10px #ffff00;
+        }
+
+        .special-symbol {
+            display: inline-block;
+            margin: 0 5px;
+            font-size: 1.5rem;
+        }
+
+        .achievement {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+            animation: achievementPulse 1s infinite;
+        }
+
+        @keyframes achievementPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .achievements-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .achievement-item {
+            background: rgba(255, 215, 0, 0.2);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            .reel {
+                width: 70px;
+                height: 70px;
+                font-size: 2rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .spin-button {
+                padding: 12px 30px;
+                font-size: 1rem;
+            }
+            
+            .stat-item {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .reel {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    
+    <div class="game-container">
+        <h1>Lucky Slots - Enhanced</h1>
+        
+        <div class="stats">
+            <div class="stat-item">Credits: <span id="credits">1000</span></div>
+            <div class="stat-item">Wins: <span id="wins">0</span></div>
+            <div class="stat-item">Losses: <span id="losses">0</span></div>
+            <div class="stat-item">Jackpots: <span id="jackpots">0</span></div>
+        </div>
+        
+
+        
+        <div class="theme-selector">
+            <div class="theme-btn active" data-theme="space">Space</div>
+            <div class="theme-btn" data-theme="ocean">Ocean</div>
+            <div class="theme-btn" data-theme="desert">Desert</div>
+            <div class="theme-btn" data-theme="forest">Forest</div>
+        </div>
+        
+        <div class="reels-container">
+            <div class="reel" id="reel1">🍒</div>
+            <div class="reel" id="reel2">🍒</div>
+            <div class="reel" id="reel3">🍒</div>
+        </div>
+        
+        <div class="message" id="message">Press SPIN to play!</div>
+        
+        <div class="achievement" id="achievement">
+            Achievement Unlocked: <span id="achievementName"></span>
+        </div>
+        
+         <div class="controls">
+            <button class="spin-button" id="spinButton">SPIN</button>
+        </div>
+        
+        <div class="achievements-list" id="achievementsList">
+            <div class="achievement-item" data-achievement="firstWin">First Win</div>
+            <div class="achievement-item" data-achievement="jackpotHunter">Jackpot Hunter</div>
+            <div class="achievement-item" data-achievement="streakMaster">Streak Master</div>
+            <div class="achievement-item" data-achievement="highRoller">High Roller</div>
+        </div>
+        
+        <div class="instructions" id="instructions">
+            <h2>How to Play</h2>
+            <ul>
+                <li>Each spin costs 100 credits</li>
+                <li>Match 2 symbols for 300 credits</li>
+                <li>Match 3 symbols for 1000 credits Jackpot!</li>
+                <li>Press Spin Button or Spacebar to spin the reels</li>
+            </ul>
+        </div>
+        
+        <div class="stats-display" id="statsDisplay" style="display: block;">
+            <h2>Game Statistics</h2>
+            <p>Total Spins: <span id="totalSpins">0</span></p>
+            <p>Average Win per Spin: <span id="avgWin">0</span> credits</p>
+            <p>Win Rate: <span id="winRate">0</span>%</p>
+            <p>Current Streak: <span id="currentStreak">0</span></p>
+            <p>Max Streak: <span id="maxStreak">0</span></p>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        const gameState = {
+            credits: 1000,
+            wins: 0,
+            losses: 0,
+            jackpots: 0,
+            totalSpins: 0,
+            spinCost: 100,
+            payouts: {
+                two: 300,
+                three: 1000
+            },
+            symbols: ['🍒', '🍋', '🍊', '🍉', '🍇', '🍓', '🍈', '🍀', '🔔', '⭐', '❄️', '🌈'],
+            audioContext: null,
+            currentStreak: 0,
+            maxStreak: 0,
+            lastResult: null,
+            isSpinning: false,
+            theme: 'space',
+            achievements: {
+                firstWin: false,
+                jackpotHunter: false,
+                streakMaster: false,
+                highRoller: false
+            }
+        };
+
+        // DOM elements
+        const creditsElement = document.getElementById('credits');
+        const winsElement = document.getElementById('wins');
+        const lossesElement = document.getElementById('losses');
+        const jackpotsElement = document.getElementById('jackpots');
+        const messageElement = document.getElementById('message');
+        const spinButton = document.getElementById('spinButton');
+        const resetButton = document.getElementById('resetButton');
+        const topUpButton = document.getElementById('topUpButton');
+        const instructionsElement = document.getElementById('instructions');
+        const statsDisplayElement = document.getElementById('statsDisplay');
+        const totalSpinsElement = document.getElementById('totalSpins');
+        const avgWinElement = document.getElementById('avgWin');
+        const winRateElement = document.getElementById('winRate');
+        const currentStreakElement = document.getElementById('currentStreak');
+        const maxStreakElement = document.getElementById('maxStreak');
+        const achievementElement = document.getElementById('achievement');
+        const achievementNameElement = document.getElementById('achievementName');
+        const achievementsListElement = document.getElementById('achievementsList');
+        const themeButtons = document.querySelectorAll('.theme-btn');
+
+        // Create stars for background
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const starCount = 150;
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                
+                // Random position
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                
+                // Random size
+                const size = Math.random() * 3;
+                
+                // Random animation duration
+                const duration = 2 + Math.random() * 5;
+                
+                star.style.left = `${x}%`;
+                star.style.top = `${y}%`;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.setProperty('--duration', `${duration}s`);
+                
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Initialize audio context
+        function initAudio() {
+            try {
+                if (!gameState.audioContext) {
+                    gameState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            } catch (e) {
+                console.error('Audio context initialization failed:', e);
+            }
+        }
+
+        // Play sound effect
+        function playSound(frequency, duration = 0.2, type = 'sine') {
+            if (!gameState.audioContext) {
+                initAudio();
+            }
+            
+            if (gameState.audioContext) {
+                try {
+                    const oscillator = gameState.audioContext.createOscillator();
+                    const gainNode = gameState.audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(gameState.audioContext.destination);
+                    
+                    oscillator.type = type;
+                    oscillator.frequency.value = frequency;
+                    gainNode.gain.value = 0.075;
+                    
+                    oscillator.start();
+                    oscillator.stop(gameState.audioContext.currentTime + duration);
+                } catch (e) {
+                    console.error('Sound playback failed:', e);
+                }
+            }
+        }
+
+        // Create particle effect
+        function createParticles(x, y, color) {
+            const particleCount = 30;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                particle.style.backgroundColor = color;
+                
+                // Random direction and speed
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 2 + Math.random() * 3;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                
+                document.body.appendChild(particle);
+                
+                // Animate particle
+                let posX = x;
+                let posY = y;
+                let opacity = 1;
+                const particleInterval = setInterval(() => {
+                    posX += vx;
+                    posY += vy;
+                    opacity -= 0.02;
+                    
+                    particle.style.left = `${posX}px`;
+                    particle.style.top = `${posY}px`;
+                    particle.style.opacity = opacity;
+                    
+                    if (opacity <= 0) {
+                        clearInterval(particleInterval);
+                        particle.remove();
+                    }
+                }, 20);
+            }
+        }
+
+        // Update UI with current game state
+        function updateUI() {
+            creditsElement.textContent = gameState.credits;
+            winsElement.textContent = gameState.wins;
+            lossesElement.textContent = gameState.losses;
+            jackpotsElement.textContent = gameState.jackpots;
+            
+            // Disable spin button if not enough credits
+            spinButton.disabled = gameState.credits < gameState.spinCost || gameState.isSpinning;
+            
+            // Warn user when credits reach 0
+            if (gameState.credits <= 0) {
+                messageElement.textContent = "Game Over! You're out of credits.";
+                messageElement.className = "message loss";
+            }
+        }
+
+        // Update statistics display
+        function updateStatsDisplay() {
+            const totalSpins = gameState.totalSpins;
+            const totalWins = gameState.wins;
+            const winRate = totalSpins > 0 ? ((totalWins / totalSpins) * 100).toFixed(1) : 0;
+            const avgWin = totalSpins > 0 ? (gameState.wins * 300 + gameState.jackpots * 1000) / totalSpins : 0;
+            
+            totalSpinsElement.textContent = totalSpins;
+            avgWinElement.textContent = avgWin.toFixed(1);
+            winRateElement.textContent = winRate;
+            currentStreakElement.textContent = gameState.currentStreak;
+            maxStreakElement.textContent = gameState.maxStreak;
+        }
+
+        // Check achievements
+        function checkAchievements() {
+            if (!gameState.achievements.firstWin && gameState.wins > 0) {
+                unlockAchievement('First Win');
+                gameState.achievements.firstWin = true;
+                highlightAchievement('firstWin');
+            }
+            
+            if (!gameState.achievements.jackpotHunter && gameState.jackpots > 0) {
+                unlockAchievement('Jackpot Hunter');
+                gameState.achievements.jackpotHunter = true;
+                highlightAchievement('jackpotHunter');
+            }
+            
+            if (!gameState.achievements.streakMaster && gameState.maxStreak >= 3) {
+                unlockAchievement('Streak Master');
+                gameState.achievements.streakMaster = true;
+                highlightAchievement('streakMaster');
+            }
+            
+            if (!gameState.achievements.highRoller && gameState.credits >= 2000) {
+                unlockAchievement('High Roller');
+                gameState.achievements.highRoller = true;
+                highlightAchievement('highRoller');
+            }
+        }
+
+        // Unlock achievement
+        function unlockAchievement(achievementName) {
+            achievementNameElement.textContent = achievementName;
+            achievementElement.style.display = 'block';
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                achievementElement.style.display = 'none';
+            }, 3000);
+        }
+
+        // Highlight achievement item
+        function highlightAchievement(achievementKey) {
+            const achievementItems = document.querySelectorAll('.achievement-item');
+            achievementItems.forEach(item => {
+                if (item.dataset.achievement === achievementKey) {
+                    item.style.backgroundColor = 'rgba(255, 215, 0, 0.5)';
+                    item.style.boxShadow = '0 0 10px rgba(255, 215, 0, 0.8)';
+                }
+            });
+        }
+
+        // Spin the reels
+        function spinReels() {
+            // Check if player has enough credits
+            if (gameState.credits < gameState.spinCost) {
+                messageElement.textContent = "Not enough credits!";
+                messageElement.className = "message loss";
+                return;
+            }
+
+            // Check if already spinning
+            if (gameState.isSpinning) return;
+            
+            gameState.isSpinning = true;
+            
+            // Deduct spin cost
+            gameState.credits -= gameState.spinCost;
+            gameState.totalSpins++;
+            updateUI();
+            
+            // Disable spin button during spin
+            spinButton.disabled = true;
+            messageElement.textContent = "Spinning...";
+            messageElement.className = "message";
+            
+            // Get random symbols for each reel
+            const results = [];
+            for (let i = 0; i < 3; i++) {
+                const randomIndex = Math.floor(Math.random() * gameState.symbols.length);
+                results.push(gameState.symbols[randomIndex]);
+            }
+            
+            // Animate spinning
+            let spinCount = 0;
+            const spinInterval = setInterval(() => {
+                spinCount++;
+                
+                // Update reels with random symbols
+                reels.forEach((reel, index) => {
+                    const randomIndex = Math.floor(Math.random() * gameState.symbols.length);
+                    reel.textContent = gameState.symbols[randomIndex];
+                });
+                
+                // Stop spinning after 15 intervals (1.5 seconds)
+                if (spinCount >= 15) {
+                    clearInterval(spinInterval);
+                    
+                    // Set final results
+                    reels.forEach((reel, index) => {
+                        reel.textContent = results[index];
+                    });
+                    
+                    // Evaluate outcome
+                    evaluateOutcome(results);
+                }
+            }, 100);
+        }
+
+        // Evaluate the outcome of the spin
+        function evaluateOutcome(results) {
+            const [symbol1, symbol2, symbol3] = results;
+            
+            // Check for jackpot (three matching symbols)
+            if (symbol1 === symbol2 && symbol2 === symbol3) {
+                gameState.credits += gameState.payouts.three;
+                gameState.wins++;
+                gameState.jackpots++;
+                gameState.currentStreak++;
+                gameState.maxStreak = Math.max(gameState.maxStreak, gameState.currentStreak);
+                
+                messageElement.textContent = "JACKPOT! You won 1000 credits!";
+                messageElement.className = "message win jackpot";
+                playSound(440, 0.5, 'sine');
+                
+                // Create jackpot particles
+                const reelsContainer = document.querySelector('.reels-container');
+                const rect = reelsContainer.getBoundingClientRect();
+                createParticles(
+                    rect.left + rect.width / 2,
+                    rect.top + rect.height / 2,
+                    '#ffff00'
+                );
+                
+            } else if (symbol1 === symbol2 || symbol2 === symbol3 || symbol1 === symbol3) {
+                // Win - two matching symbols
+                gameState.credits += gameState.payouts.two;
+                gameState.wins++;
+                gameState.currentStreak++;
+                gameState.maxStreak = Math.max(gameState.maxStreak, gameState.currentStreak);
+                
+                messageElement.textContent = "You won 300 credits!";
+                messageElement.className = "message win";
+                playSound(440, 0.3, 'sine');
+                
+                // Create win particles
+                const reelsContainer = document.querySelector('.reels-container');
+                const rect = reelsContainer.getBoundingClientRect();
+                createParticles(
+                    rect.left + rect.width / 2,
+                    rect.top + rect.height / 2,
+                    '#00ff00'
+                );
+            } else {
+                // Loss - no matches
+                gameState.losses++;
+                gameState.currentStreak = 0;
+                
+                messageElement.textContent = "No match. Try again!";
+                messageElement.className = "message loss";
+                playSound(220, 0.3, 'sine');
+            }
+            
+            updateUI();
+            updateStatsDisplay();
+            checkAchievements();
+            
+            // Re-enable spin button
+            gameState.isSpinning = false;
+            spinButton.disabled = false;
+        }
+
+         // Reset the game
+        function resetGame() {
+            gameState.credits = 1000;
+            gameState.wins = 0;
+            gameState.losses = 0;
+            gameState.jackpots = 0;
+            gameState.totalSpins = 0;
+            gameState.currentStreak = 0;
+            gameState.maxStreak = 0;
+            gameState.lastResult = null;
+            gameState.achievements = {
+                firstWin: false,
+                jackpotHunter: false,
+                streakMaster: false,
+                highRoller: false
+            };
+            
+            messageElement.textContent = "Game reset! Press SPIN to play!";
+            messageElement.className = "message";
+            
+            // Reset reels to initial state
+            reels.forEach(reel => {
+                reel.textContent = '🍒';
+            });
+            
+            updateUI();
+            updateStatsDisplay();
+            
+            // Hide achievement
+            achievementElement.style.display = 'none';
+        }
+
+        // Top up credits
+        function topUpCredits() {
+            gameState.credits += 500;
+            messageElement.textContent = "Credits added! You now have " + gameState.credits + " credits.";
+            messageElement.className = "message win";
+            updateUI();
+        }
+
+        // Toggle instructions
+        function toggleInstructions() {
+            instructionsElement.style.display = instructionsElement.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Toggle statistics display
+        function toggleStats() {
+            if (statsDisplayElement.style.display === 'block') {
+                statsDisplayElement.style.display = 'none';
+            } else {
+                statsDisplayElement.style.display = 'block';
+                updateStatsDisplay();
+            }
+        }
+
+        // Toggle instructions
+        function toggleInstructions() {
+            instructionsElement.style.display = instructionsElement.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Change theme
+        function changeTheme(theme) {
+            gameState.theme = theme;
+            
+            // Update active theme button
+            themeButtons.forEach(btn => {
+                if (btn.dataset.theme === theme) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            // Apply theme-specific styles
+            const body = document.body;
+            switch(theme) {
+                case 'ocean':
+                    body.style.background = 'radial-gradient(circle, #001a4d 0%, #000033 70%)';
+                    break;
+                case 'desert':
+                    body.style.background = 'radial-gradient(circle, #3a2000 0%, #1a1000 70%)';
+                    break;
+                case 'forest':
+                    body.style.background = 'radial-gradient(circle, #002200 0%, #001100 70%)';
+                    break;
+                default: // space
+                    body.style.background = 'radial-gradient(circle, #0c1445 0%, #000000 70%)';
+            }
+        }
+
+        // Initialize the game
+        function initGame() {
+            createStars();
+            updateUI();
+            updateStatsDisplay();
+            
+            // Set up event listeners
+            spinButton.addEventListener('click', spinReels);
+            
+            // Theme change listeners
+            themeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    changeTheme(btn.dataset.theme);
+                });
+            });
+            
+            // Keyboard support
+            document.addEventListener('keydown', (event) => {
+                if (event.code === 'Space') {
+                    spinReels();
+                }
+            });
+            
+            // Initialize audio context on first user interaction
+            document.addEventListener('click', initAudio, { once: true });
+        }
+
+        // Reels array
+        const reels = [
+            document.getElementById('reel1'),
+            document.getElementById('reel2'),
+            document.getElementById('reel3')
+        ];
+
+        // Start the game when page loads
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>

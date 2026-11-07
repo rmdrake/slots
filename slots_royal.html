@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lucky Slots - Space Fantasy Slot Machine</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: radial-gradient(ellipse at top, #1a0033 0%, #000011 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #e0e0ff;
+    padding: 20px;
+}
+.game-container {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    padding: 32px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(138,43,226,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+h1 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+    background: linear-gradient(to right, #ff00ff, #00ffff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 30px rgba(255,0,255,0.5);
+}
+.subtitle {
+    text-align: center;
+    color: #aaaaff;
+    margin-bottom: 24px;
+    font-size: 0.9rem;
+}
+.stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 24px;
+    background: rgba(0,0,0,0.3);
+    padding: 12px 16px;
+    border-radius: 12px;
+}
+.stat { text-align: center; }
+.stat-value { font-size: 1.5rem; font-weight: bold; color: #00ffff; }
+.stat-label { font-size: 0.75rem; color: #aaa; text-transform: uppercase; }
+.reels-wrapper {
+    background: rgba(0,0,0,0.4);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 2px solid rgba(138,43,226,0.5);
+}
+.reels {
+    display: flex;
+    justify-content: space-around;
+    gap: 12px;
+}
+.reel {
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, #222244, #111122);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    border: 2px solid rgba(255,255,255,0.1);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 20px rgba(138,43,226,0.3);
+}
+.reel.spinning {
+    animation: spin-pulse 0.1s infinite;
+}
+@keyframes spin-pulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+.reel.winning {
+    animation: glow-win 1s ease-in-out 3;
+    background: radial-gradient(circle, #ffdd55, #aa6600);
+}
+@keyframes glow-win {
+    0%,100% { box-shadow: 0 0 20px rgba(255,221,85,0.6), inset 0 0 20px rgba(0,0,0,0.5); }
+    50% { box-shadow: 0 0 40px rgba(255,221,85,1), inset 0 0 20px rgba(255,221,85,0.3); }
+}
+.controls {
+    text-align: center;
+}
+.spin-btn {
+    background: linear-gradient(to bottom, #ff00ff, #aa00aa);
+    border: none;
+    color: white;
+    padding: 16px 48px;
+    font-size: 1.25rem;
+    font-weight: bold;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(255,0,255,0.4);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.spin-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(255,0,255,0.6);
+}
+.spin-btn:active:not(:disabled){
+    transform: translateY(1px);
+}
+.spin-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.message {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 1.1rem;
+    min-height: 28px;
+    font-weight: bold;
+}
+.message.win { color: #ffdd55; text-shadow: 0 0 10px rgba(255,221,85,0.8); }
+.message.loss { color: #ff5555; }
+.decor {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 2rem;
+    opacity: 0.15;
+    animation: float 6s ease-in-out infinite;
+}
+@keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+@media (max-width: 600px) {
+    .game-container { padding: 20px; }
+    h1 { font-size: 2rem; }
+    .reel { width: 80px; height: 80px; font-size: 36px; }
+    .spin-btn { padding: 14px 32px; font-size: 1.1rem; }
+}
+</style>
+</head>
+<body role="application" aria-label="Lucky Slots Game">
+<div class="decor" aria-hidden="true">⭐</div>
+
+<main class="game-container" aria-labelledby="title">
+<h1 id="title">Lucky Slots</h1>
+<p class="subtitle">Space Fantasy Edition • 100 credits per spin</p>
+
+<div class="stats" role="status">
+<div class="stat"><div id="credits" class="stat-value">1000</div><div class="stat-label">Credits</div></div>
+<div class="stat"><div id="wins" class="stat-value">0</div><div class="stat-label">Wins</div></div>
+<div class="stat"><div id="losses" class="stat-value">0</div><div class="stat-label">Losses</div></div>
+</div>
+
+<section class="reels-wrapper" aria-label="Slot reels">
+<div class="reels">
+<div class="reel" id="reel1" role="img" aria-label="Reel 1">🍒</div>
+<div class="reel" id="reel2" role="img" aria-label="Reel 2">🍋</div>
+<div class="reel" id="reel3" role="img" aria-label="Reel 3">🍊</div>
+</div>
+</section>
+
+<section class="controls">
+<button id="spinBtn" class="spin-btn" aria-label="Spin reels">SPIN</button>
+<div id="message" class="message" role="status" aria-live="polite"></div>
+</section>
+</main>
+
+<script>
+const SYMBOLS = ['🍒','🍋','🍊','🍉','🍇','🍓','🍈','🍀','🔔','⭐','❄️','🌈'];
+let credits = 1000;
+let wins = 0;
+let losses = 0;
+let spinning = false;
+
+const reel1El = document.getElementById('reel1');
+const reel2El = document.getElementById('reel2');
+const reel3El = document.getElementById('reel3');
+const creditsEl = document.getElementById('credits');
+const winsEl = document.getElementById('wins');
+const lossesEl = document.getElementById('losses');
+const spinBtn = document.getElementById('spinBtn');
+const messageEl = document.getElementById('message');
+
+let audioCtx;
+function getAudioContext() {
+    if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch(e){ console.warn('Web Audio not supported', e); }
+    }
+    return audioCtx;
+}
+function playTone(freq, duration=0.3) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.value = 0.2;
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.stop(ctx.currentTime + duration);
+}
+
+function updateUI() {
+    creditsEl.textContent = credits;
+    winsEl.textContent = wins;
+    lossesEl.textContent = losses;
+    spinBtn.disabled = spinning || credits < 100;
+}
+
+function clearReelClasses() {
+    [reel1El, reel2El, reel3El].forEach(r => r.classList.remove('winning'));
+}
+
+function spin() {
+    if (spinning || credits < 100) return;
+    spinning = true;
+    credits -= 100;
+    messageEl.textContent = 'Spinning...';
+    messageEl.className = 'message';
+    updateUI();
+    spinBtn.disabled = true;
+
+    const reels = [reel1El, reel2El, reel3El];
+    reels.forEach(r => r.classList.add('spinning'));
+
+    let steps = 0;
+    const maxSteps = 15;
+    const interval = setInterval(() => {
+        reels.forEach(r => r.textContent = SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)]);
+        steps++;
+        if (steps >= maxSteps) {
+            clearInterval(interval);
+            finishSpin();
+        }
+    }, 100);
+
+    function finishSpin() {
+        reels.forEach(r => r.classList.remove('spinning'));
+        const result = [
+            SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)],
+            SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)],
+            SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)]
+        ];
+        reel1El.textContent = result[0];
+        reel2El.textContent = result[1];
+        reel3El.textContent = result[2];
+
+        const [a,b,c] = result;
+        let payout = 0;
+        let text = '';
+
+        if (a === b && b === c) {
+            payout = 1000;
+            credits += payout;
+            wins++;
+            text = 'JACKPOT! Three matching symbols! +1000';
+            messageEl.classList.add('win');
+            reels.forEach(r => r.classList.add('winning'));
+            playTone(440);
+        } else if (a === b || b === c || a === c) {
+            payout = 300;
+            credits += payout;
+            wins++;
+            text = 'Win! Two matching symbols! +300';
+            messageEl.classList.add('win');
+            reels.forEach(r => r.classList.add('winning'));
+            playTone(440);
+        } else {
+            losses++;
+            text = 'No match... Try again!';
+            messageEl.classList.add('loss');
+            playTone(220);
+        }
+
+        messageEl.textContent = text;
+        spinning = false;
+        updateUI();
+        setTimeout(clearReelClasses, 3000);
+    }
+}
+
+spinBtn.addEventListener('click', spin);
+updateUI();
+</script>
+</body>
+</html>
